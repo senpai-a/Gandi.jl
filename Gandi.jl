@@ -6,14 +6,19 @@ export screenSize,pyautogui
 
 using PyCall
 using Images
-#using FFTW
+using FFTW
 using Statistics
 using ImageFeatures
 
 const pyautogui = pyimport("pyautogui")
 const numpy = pyimport("numpy")
+const image=pyimport("PIL.Image")
 const screenSize = pyautogui.size()
 
+"""
+    see: get screen image
+    range: (x(col), y(row), width(ncol), height(nrow))
+"""
 function see(range=(1,1,screenSize...))
     s = pyautogui.screenshot(region = (range[1]-1,range[2]-1,range[3],range[4]))
     ns = numpy.array(s)
@@ -30,8 +35,10 @@ mouseDown(button="left") = pyautogui.mouseDown(button=button)
 mouseUp(button="left") = pyautogui.mouseUp(button=button)
 position() = pyautogui.position()
 
-# find pattern in scene. if fails return -1,-1 otherwise position of the pattern
-# if pattern appears multiple times it will also fail (my algorithm too stupid)
+"""
+    find pattern in scene. if fails return (-1,-1), otherwise returns position of the pattern
+    if the pattern appears multiple times it will also fail (cuz my algorithm too stupid)
+"""
 function findPattern(scene::Array{<:Any,2},patt::Array{<:Any,2})
     gscene = Gray.(scene)
     gpatt = Gray.(patt)
@@ -65,28 +72,38 @@ function findPattern(patt::String;range=(1,1,screenSize...))
     findPattern(scene,Gray.(load(patt)))
 end
 
-function locate(scene::Array{<:Any,2},patt::Array{<:Any,2};confidence=.8)
-    scene = RGB.(scene)
-    patt = RGB.(patt)
+"""
+    locate: locate pattern in scene, return vector of matched location.
+    using a FFT based cross-correlation scheme, can't deal with scaled/rotated pattern
+"""
+function locate(scene::Array{<:Any,2},patt::Array{<:Any,2};confidence=.9)
     m,n=size(scene)
     pm,pn=size(patt)
-    ret = []
-    Threads.@threads for i in 1:m-pm+1
-        for j in 1:n-pn+1
-            match = 0
-            wnd = @view scene[i:i+pm-1,j:j+pn-1]
-            for x in 1:pn
-                for y in 1:pm
-                    if wnd[y,x]==patt[y,x] match+=1 end
-                end
+    scene = permutedims(channelview(RGB.(scene)),[2,3,1])
+    patt = permutedims(channelview(RGB.(patt)),[2,3,1])
+    scene_py = image.fromarray(reinterpret(UInt8,scene))
+    patt_py = image.fromarray(reinterpret(UInt8,patt))
+    ans = collect(pyautogui.locateAll(patt_py,scene_py,confidence=confidence))
+    ans = sort((t->(t[2]+t[4]÷2,t[1]+t[3]÷2)).(ans))
+    if length(ans)<2 return ans end
+
+    dd = min(pm,pn)/2
+    ret = Tuple{Int,Int}[]
+    check = 1
+    while !isempty(ans)
+        push!(ret,ans[1])
+        popfirst!(ans)
+        for i in length(ans):-1:1
+            if sum(abs2,ans[i].-ret[check])<dd^2
+                deleteat!(ans,i)
             end
-            if match/pm/pn>confidence push!(ret,(i,j).+(pm,pn).÷2) end
         end
+        check+=1
     end
     ret
 end
 
-function locate(patt::String;confidence=.8,range=(1,1,screenSize...))
+function locate(patt::String;confidence=.9,range=(1,1,screenSize...))
     scene = see(range)
     locate(scene,load(patt);confidence=confidence)
 end
@@ -105,19 +122,18 @@ function markPoint(img,pos)
 end
 
 # drafts for testing
-cd("C:/Users/Administrator/OneDrive/Gandi.jl/img")
-s = (x->load("$(x).png")).(0:7)
-pat = load("pat0.png")
-locate(s[1],pat)
-res=(x->findPattern(x,pat)).(s)
-markPoint(s[6],res[6])
+#cd("C:/Users/Administrator/OneDrive/Gandi.jl/img")
+#s = (x->load("$(x).png")).(0:7)
+#pat = load("pat6.png")
+#locate(s[1],pat)
+#res=(x->locate(x,pat;confidence=.8)).(s)
+#markPoint(s[2],res[2][1])
+
 end # module Valkyrie
 
 module FGOUI
 
 using Main.Valkyrie
-
-anchor = [(1,1),screenSize]
 
 
 end #module FGOUI
