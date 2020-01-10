@@ -6,7 +6,7 @@ export screenSize,pyautogui
 
 using PyCall
 using Images
-using FFTW
+#using FFTW
 using Statistics
 using ImageFeatures
 
@@ -36,7 +36,8 @@ mouseUp(button="left") = pyautogui.mouseUp(button=button)
 position() = pyautogui.position()
 
 """
-    find pattern in scene. if fails return (-1,-1), otherwise returns position of the pattern
+    findPattern: find pattern in scene. if fail, returns (-1,-1), otherwise returns position of the pattern
+    using a keypoint matching scheme
     if the pattern appears multiple times it will also fail (cuz my algorithm too stupid)
 """
 function findPattern(scene::Array{<:Any,2},patt::Array{<:Any,2})
