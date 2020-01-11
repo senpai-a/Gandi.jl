@@ -1,7 +1,7 @@
 module Valkyrie
 
 export moveTo,click,drag,dragTo,mouseDown,mouseUp
-export position,findPattern
+export position,findPattern,locate
 export screenSize,pyautogui
 
 using PyCall
@@ -39,6 +39,7 @@ position() = pyautogui.position()
     findPattern: find pattern in scene. if fail, returns (-1,-1), otherwise returns position of the pattern
     using a keypoint matching scheme
     if the pattern appears multiple times it will also fail (cuz my algorithm too stupid)
+        TODO: handle multiple pattern senatio (for small scaling and rotation, use a clustering method)
 """
 function findPattern(scene::Array{<:Any,2},patt::Array{<:Any,2})
     gscene = Gray.(scene)
@@ -88,6 +89,7 @@ function locate(scene::Array{<:Any,2},patt::Array{<:Any,2};confidence=.9)
     ans = sort((t->(t[2]+t[4]÷2,t[1]+t[3]÷2)).(ans))
     if length(ans)<2 return ans end
 
+    #clustering ans
     dd = min(pm,pn)/2
     ret = Tuple{Int,Int}[]
     check = 1
