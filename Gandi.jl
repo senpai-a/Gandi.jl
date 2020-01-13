@@ -160,6 +160,7 @@ function waitToSee(patt::String,range=anchor,delay=0.3)
         scene = see(range)
         loc = locate(scene,patt)
     end
+    sleep(delay)
     return loc
 end
 
@@ -431,8 +432,8 @@ function enterQuest(entryPatt::String="patt/questEntry.png")
     waitToClick("patt/start.png")
 end
 
-function 刷本(套路::Function)
-    enterQuest()
+function 刷本(套路::Function,本::String="patt/questEntry.png")
+    enterQuest(本)
     套路()
     瞎几把打()#finish up
 end
