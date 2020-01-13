@@ -98,7 +98,7 @@ function locate(scene::AbstractArray{<:Any,2},patt::AbstractArray{<:Any,2};confi
     scene_py = image.fromarray(reinterpret(UInt8,scene))
     patt_py = image.fromarray(reinterpret(UInt8,patt))
     ans = collect(pyautogui.locateAll(patt_py,scene_py,confidence=confidence))
-    ans = sort((t->(t[1]+t[3]÷2,t[2]+t[4]÷2)).(ans))
+    ans = sort((t->(t[1]+pn÷2,t[2]+pm÷2)).(ans))
     if length(ans)<2 return ans end
 
     #clustering ans
@@ -225,6 +225,11 @@ function selectEnemy(id)
     dx = 180/960
     x = x0+(id-1)*dx
     click(pos(x,y)...)
+
+    sleep(.3)
+    if isSeeing("patt/enemyDoubleSelect.png")
+        waitToClick("patt/enemyDoubleSelect.png")
+    end
 end
 
 function servantSkill(servantId,skillId)
