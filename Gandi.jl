@@ -120,7 +120,9 @@ end
 
 function locate(patt::String;confidence=.9,range=anchor)
     scene = see(range)
+    offset = Tuple(range[1:2])
     locate(scene,load(patt);confidence=confidence)
+    (x->x.+offset).(locate)
 end
 
 function markPoint(img,pos)
@@ -140,7 +142,8 @@ function waitToClick(patt::String,range=anchor,delay=0.5)
     sleep(delay)
     patt = load(patt)
     scene = see(range)
-    loc = locate(scene,patt)
+    offset = Tuple(range[1:2])
+    loc = (x->x.+offset).(locate(scene,patt))
     while isempty(loc)
         sleep(delay)
         scene = see(range)
@@ -154,7 +157,8 @@ function waitToSee(patt::String,range=anchor,delay=0.3)
     sleep(delay)
     patt = load(patt)
     scene = see(range)
-    loc = locate(scene,patt)
+    offset = Tuple(range[1:2])
+    loc = (x->x.+offset).(locate(scene,patt))
     while isempty(loc)
         sleep(delay)
         scene = see(range)
@@ -208,6 +212,7 @@ end
 function selectFriend(patt::String;refreshRate=10)
     tried = 0
     while tryToClick(patt,anchor)==false
+        log("refresh friend list")
         refreshFriend()
         sleep(refreshRate)
         tried+=1
@@ -230,6 +235,7 @@ function selectEnemy(id)
     if isSeeing("patt/enemyDoubleSelect.png")
         waitToClick("patt/enemyDoubleSelect.png")
     end
+    sleep(.3)
 end
 
 function servantSkill(servantId,skillId)
@@ -359,7 +365,10 @@ function log(msg::String)
     close(f)
 end
 
-function planCard()
+function planCard(hoguId=Int[],hoguOrd=Int[])
+    if length(hoguId)!=length(hoguOrd) || length(hoguId)>3
+        throw(ErrorException("planCard: invalid hogu arguments."))
+    end
     priority = []
     for i in 1:9
         fn = "cardPlan/$(i).png"
@@ -378,13 +387,26 @@ function planCard()
     que = (x->((x[1]-a[1])/a[3],(x[2]-a[2])/a[4])).(que)
     que = (x->floor(Int,(x[1]-(38/960))*960/190+1)).(que)
     selected = falses(5)
+    cardQue = []
     for cardi in que
         selected[cardi]=true
-        card(cardi)
+        push!(cardQue,cardi)
     end
     for i in 1:5
-        if !selected[i] card(i) end
+        if !selected[i] push!(cardQue,cardi) end
     end
+
+    cardi = 1
+    for i in 1:5
+        if i in hoguOrd
+            hogui = indexin(1,[2,3,1])[1]
+            hogu(hoguId[hogui])
+        else
+            card(cardi)
+            cardi+=1
+        end
+    end
+    return nothing
 end
 
 function 瞎几把打()
