@@ -54,6 +54,8 @@
 	Images
 	ImageFeatures
 	ImageMagick
+	opencv-python
+
 
 
 ----------
