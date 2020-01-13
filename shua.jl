@@ -1,3 +1,4 @@
+cd(raw"C:\Users\Biuuu\OneDrive\Gandi.jl")
 include("Gandi.jl")
 
 using .Valkyrie
@@ -12,9 +13,10 @@ function 狂兰孔明换人3T()
     servantSkillSync(3,3)
 
     servantSkillSync(2,1;targetFriend=1)#cba
-
+    
+    selectEnemy(1)
     cardSelection()#进入选卡
-    hogu(1); planCard()
+    planCard([1],[2])#宝具id,宝具出牌顺序
 
     #round 2
     waitToSee("patt/rdy.png")#等待可以操作
@@ -26,13 +28,14 @@ function 狂兰孔明换人3T()
 
     servantSkillSync(1,3)#狂兰np率
 
+    selectEnemy(1)
     cardSelection()#进入选卡
-    hogu(1); planCard()
+    planCard([1],[2])#宝具id,宝具出牌顺序
 
     #round 3
     waitToSee("patt/rdy.png")#等待可以操作
     masterSkillSync(1)#全体加攻
-    masterSkillSync(2;targetEnemy=1)#眩晕
+    masterSkillSync(2;targetEnemy=3)#眩晕
     servantSkillSync(3,2)#cba
     servantSkillSync(2,2)#cba
     servantSkillSync(2,3;targetFriend=1)
@@ -41,10 +44,11 @@ function 狂兰孔明换人3T()
     servantSkillSync(1,2)
 
     cardSelection()#进入选卡
-    hogu(1); planCard()
+    planCard([1],[1])
 end
 
 setAnchor!(3,33,960,540)
+
 while true
-    刷本(狂兰孔明换人3T)
+    刷本(狂兰孔明换人3T,"patt/quest5.png")
 end

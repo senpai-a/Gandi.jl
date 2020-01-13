@@ -121,8 +121,7 @@ end
 function locate(patt::String;confidence=.9,range=anchor)
     scene = see(range)
     offset = Tuple(range[1:2])
-    locate(scene,load(patt);confidence=confidence)
-    (x->x.+offset).(locate)
+    (x->x.+offset).(locate(scene,load(patt);confidence=confidence))
 end
 
 function markPoint(img,pos)
@@ -147,7 +146,7 @@ function waitToClick(patt::String,range=anchor,delay=0.5)
     while isempty(loc)
         sleep(delay)
         scene = see(range)
-        loc = locate(scene,patt)
+        loc = (x->x.+offset).(locate(scene,patt))
     end
     click(loc[1]...)
     return nothing
@@ -162,7 +161,7 @@ function waitToSee(patt::String,range=anchor,delay=0.3)
     while isempty(loc)
         sleep(delay)
         scene = see(range)
-        loc = locate(scene,patt)
+        loc = (x->x.+offset).(locate(scene,patt))
     end
     sleep(delay)
     return loc
@@ -386,6 +385,7 @@ function planCard(hoguId=Int[],hoguOrd=Int[])
     a = FGOUI.anchor
     que = (x->((x[1]-a[1])/a[3],(x[2]-a[2])/a[4])).(que)
     que = (x->floor(Int,(x[1]-(38/960))*960/190+1)).(que)
+    #println("priority: $que")
     selected = falses(5)
     cardQue = []
     for cardi in que
@@ -393,16 +393,18 @@ function planCard(hoguId=Int[],hoguOrd=Int[])
         push!(cardQue,cardi)
     end
     for i in 1:5
-        if !selected[i] push!(cardQue,cardi) end
+        if !selected[i] push!(cardQue,i) end
     end
-
+    #println(cardQue)
     cardi = 1
     for i in 1:5
         if i in hoguOrd
-            hogui = indexin(1,[2,3,1])[1]
+            hogui = indexin(i,hoguOrd)[1]
             hogu(hoguId[hogui])
+            #println("hogu: $(hoguId[hogui])")
         else
-            card(cardi)
+            card(cardQue[cardi])
+            #println("card: $(cardQue[cardi])")
             cardi+=1
         end
     end
@@ -453,7 +455,7 @@ function enterQuest(entryPatt::String="patt/questEntry.png")
     if isSeeing("patt/appleG.png")
         selectApple()
     end
-    sleep(2)
+    sleep(4)
     selectFriend("patt/friend.png")
     sleep(.5)
     waitToClick("patt/start.png")
