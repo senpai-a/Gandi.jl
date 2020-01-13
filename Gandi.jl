@@ -329,7 +329,6 @@ function hogu(hoguId)
     if hoguId∉1:3
         throw(ErrorException("hogu: index out of range"))
     end
-    sleep(2.5)
     x0,y = (307/960,152/540)
     dx = 170/960
     x = x0+(hoguId-1)*dx
@@ -338,6 +337,7 @@ end
 
 function cardSelection()
     click(pos(855/960,455/540)...)
+    sleep(2.5)
 end
 
 function quitCardSelection()
@@ -387,7 +387,7 @@ function planCard(hoguId=Int[],hoguOrd=Int[])
     que = (x->floor(Int,(x[1]-(38/960))*960/190+1)).(que)
     #println("priority: $que")
     selected = falses(5)
-    cardQue = []
+    cardQue = Int[]
     for cardi in que
         selected[cardi]=true
         push!(cardQue,cardi)
@@ -395,7 +395,7 @@ function planCard(hoguId=Int[],hoguOrd=Int[])
     for i in 1:5
         if !selected[i] push!(cardQue,i) end
     end
-    #println(cardQue)
+    #println("cardQue: $cardQue")
     cardi = 1
     for i in 1:5
         if i in hoguOrd
@@ -450,7 +450,7 @@ end
 
 function enterQuest(entryPatt::String="patt/questEntry.png")
     log("Quest start.")
-    waitToClick(entryPatt)
+    waitToClick(entryPatt);click()
     sleep(2)
     if isSeeing("patt/appleG.png")
         selectApple()
