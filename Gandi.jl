@@ -450,7 +450,7 @@ end
 
 function enterQuest(entryPatt::String="patt/questEntry.png")
     log("Quest start.")
-    waitToClick(entryPatt);click()
+    waitToClick(entryPatt)
     sleep(2)
     if isSeeing("patt/appleG.png")
         selectApple()
