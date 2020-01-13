@@ -318,6 +318,7 @@ function hogu(hoguId)
     if hoguId∉1:3
         throw(ErrorException("hogu: index out of range"))
     end
+    sleep(2.5)
     x0,y = (307/960,152/540)
     dx = 170/960
     x = x0+(hoguId-1)*dx
@@ -332,4 +333,108 @@ function quitCardSelection()
     click(pos(900/960,510/540)...)
 end
 
-end #module FGOUI
+end # module FGOUI
+
+module FGO
+
+using Main.Valkyrie
+using Main.FGOUI
+using Dates
+export planCard,enterQuest,瞎几把打
+export 刷本
+export log
+
+import Base.log
+function log(msg::String)
+    f = open("log.txt","a")
+    msg = "$(now()): $msg"
+    println(f,msg)
+    println(msg)
+    close(f)
+end
+
+function planCard()
+    priority = []
+    for i in 1:9
+        fn = "cardPlan/$(i).png"
+        if isfile(fn)
+            push!(priority,fn)
+        end
+    end
+    que = []
+    for pat in priority
+        loc = locate(pat;range=FGOUI.anchor)
+        append!(que,loc)
+        if length(que)>=3 break end
+    end
+    #transform (x,y) to cardId
+    a = FGOUI.anchor
+    que = (x->((x[1]-a[1])/a[3],(x[2]-a[2])/a[4])).(que)
+    que = (x->floor(Int,(x[1]-(38/960))*960/190+1)).(que)
+    selected = falses(5)
+    for cardi in que
+        selected[cardi]=true
+        card(cardi)
+    end
+    for i in 1:5
+        if !selected[i] card(i) end
+    end
+end
+
+function 瞎几把打()
+    log("开始瞎几把打")
+    nextRound = isSeeing("patt/rdy.png")
+    endQ = isSeeing("patt/end1.png")
+    while !nextRound && !endQ
+        log("等等看是继续打还是打完了")
+        sleep(3)
+        nextRound = isSeeing("patt/rdy.png")
+        endQ = isSeeing("patt/end1.png")
+    end
+    log("继续打=$(nextRound) 打完了=$(endQ)")
+    while nextRound && !endQ
+        log("继续打")
+        cardSelection();sleep(2)
+        hogu(1); planCard()
+        nextRound = isSeeing("patt/rdy.png")
+        endQ = isSeeing("patt/end1.png")
+        while !nextRound && !endQ
+            log("等等看是继续打还是打完了")
+            sleep(3)
+            nextRound = isSeeing("patt/rdy.png")
+            endQ = isSeeing("patt/end1.png")
+        end
+    end
+    log("打完了")
+    waitToClick("patt/end1.png")
+    click();click();sleep(0.2)
+    waitToClick("patt/end2.png")
+    click();click();sleep(0.2)
+    waitToClick("patt/end3.png")
+    sleep(2)
+    if isSeeing("patt/end4.png")
+        waitToClick("patt/end4.png")
+    end
+    log("出来了")
+end
+
+function enterQuest(entryPatt::String="patt/questEntry.png")
+    log("Quest start.")
+    waitToClick(entryPatt)
+    sleep(2)
+    if isSeeing("patt/appleG.png")
+        selectApple()
+    end
+    sleep(2)
+    selectFriend("patt/friend.png")
+    sleep(.5)
+    waitToClick("patt/start.png")
+end
+
+function 刷本(套路::Function)
+    enterQuest()
+    套路()
+    瞎几把打()#finish up
+end
+
+end  # module FGO
