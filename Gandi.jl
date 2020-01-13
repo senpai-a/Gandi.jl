@@ -2,7 +2,7 @@ module Valkyrie
 
 export moveTo,click,drag,dragTo,mouseDown,mouseUp
 export position,findPattern,locate
-export screenSize,pyautogui
+export anchor,setAnchor!,pos
 export waitToSee,waitToClick,tryToClick,isSeeing
 
 using PyCall
@@ -14,13 +14,24 @@ using ImageFeatures
 const pyautogui = pyimport("pyautogui")
 const numpy = pyimport("numpy")
 const image=pyimport("PIL.Image")
-const screenSize = pyautogui.size()
+global anchor = [1,1,pyautogui.size()...]
+
+function setAnchor!(x,y,w,h)
+    global anchor = [x,y,w,h]
+end
+
+"""
+    pos(x,y): transfer ratio coordinate (x,y) to screen coordinate
+    where x and y are in 0~1 and pos(x,y) in [0,w]×[0,h]
+    this supports variable resolution, but anchor must be set properly with setAnchor! at first
+"""
+pos(x,y) = (anchor[1]+round(Int,x*anchor[3]),anchor[2]+round(Int,y*anchor[4]))
 
 """
     see: get screen image
     range: (x(col), y(row), width(ncol), height(nrow))
 """
-function see(range=(1,1,screenSize...))
+function see(range=anchor)
     s = pyautogui.screenshot(region = (range[1]-1,range[2]-1,range[3],range[4]))
     ns = numpy.array(s)
     ret = permutedims(reinterpret(N0f8,ns),[3,1,2])
@@ -70,7 +81,7 @@ function findPattern(scene::AbstractArray{<:Any,2},patt::AbstractArray{<:Any,2})
     end
 end
 
-function findPattern(patt::String;range=(1,1,screenSize...))
+function findPattern(patt::String;range=anchor)
     scene = see(range)
     findPattern(scene,Gray.(load(patt)))
 end
@@ -107,7 +118,7 @@ function locate(scene::AbstractArray{<:Any,2},patt::AbstractArray{<:Any,2};confi
     ret
 end
 
-function locate(patt::String;confidence=.9,range=(1,1,screenSize...))
+function locate(patt::String;confidence=.9,range=anchor)
     scene = see(range)
     locate(scene,load(patt);confidence=confidence)
 end
@@ -125,7 +136,8 @@ function markPoint(img,pos)
     ret
 end
 
-function waitToClick(patt::String,range=(0,0,screenSize...),delay=0.5)
+function waitToClick(patt::String,range=anchor,delay=0.5)
+    sleep(delay)
     patt = load(patt)
     scene = see(range)
     loc = locate(scene,patt)
@@ -138,7 +150,8 @@ function waitToClick(patt::String,range=(0,0,screenSize...),delay=0.5)
     return nothing
 end
 
-function waitToSee(patt::String,range=(0,0,screenSize...),delay=0.5)
+function waitToSee(patt::String,range=anchor,delay=0.3)
+    sleep(delay)
     patt = load(patt)
     scene = see(range)
     loc = locate(scene,patt)
@@ -150,7 +163,7 @@ function waitToSee(patt::String,range=(0,0,screenSize...),delay=0.5)
     return loc
 end
 
-function tryToClick(patt::String,range=(0,0,screenSize...))::Bool
+function tryToClick(patt::String,range=anchor)::Bool
     loc = locate(patt;range=range)
     if isempty(loc) return false
     else
@@ -159,7 +172,7 @@ function tryToClick(patt::String,range=(0,0,screenSize...))::Bool
     end
 end
 
-function isSeeing(patt::String,range=(0,0,screenSize...))::Bool
+function isSeeing(patt::String,range=anchor)::Bool
     !isempty(locate(patt;range=range))
 end
 
@@ -168,23 +181,10 @@ end # module Valkyrie
 module FGOUI
 
 using Main.Valkyrie
-export setAnchor!,pos
 export servantSkill,skillTarget,orderChange,masterSkill,card,hogu
 export selectEnemy,cardSelection,quitCardSelection
 export selectApple,refreshFriend,selectFriend
-
-global anchor = (0,0,screenSize...)
-
-function setAnchor!(x,y,w,h)
-    global anchor = (x,y,w,h)
-end
-
-"""
-    pos(x,y): transfer ratio coordinate (x,y) to screen coordinate
-    where x and y are in 0~1 and pos(x,y) in [0,w]×[0,h]
-    this supports variable resolution, but anchor must be set properly with setAnchor! at first
-"""
-pos(x,y) = (anchor[1]+round(Int,x*anchor[3]),anchor[2]+round(Int,y*anchor[4]))
+export servantSkillSync,masterSkillSync
 
 function selectApple()
     click(pos(762/960,393/540)...)
@@ -201,7 +201,7 @@ end
 function refreshFriend()
     click(pos(640/960,96/540)...)
     sleep(0.2)
-    click(pos(545/960,420/540))
+    click(pos(545/960,420/540)...)
 end
 
 function selectFriend(patt::String;refreshRate=10)
@@ -237,6 +237,21 @@ function servantSkill(servantId,skillId)
     click(pos(x,y)...)
 end
 
+function servantSkillSync(servantId,skillId;targetFriend=0,targetEnemy=0)
+    if servantId∉1:3 || skillId∉1:3 || targetFriend∉0:3 || targetEnemy∉0:3
+        throw(ErrorException("servantSkillSync: index out of range"))
+    end
+    if targetEnemy!=0
+        selectEnemy(targetEnemy)
+    end
+    servantSkill(servantId,skillId)
+    if targetFriend!=0
+        sleep(.4)
+        skillTarget(targetFriend)
+    end
+    waitToSee("patt/rdy.png")
+end
+
 function skillTarget(servantId)
     if servantId∉1:3
         throw(ErrorException("skillTarget: index out of range"))
@@ -269,6 +284,24 @@ function masterSkill(skillId)
     dx = 65/960
     x = x0 + (skillId-1)*dx
     click(pos(x,y)...)
+end
+
+function masterSkillSync(skillId;targetFriend=0,targetEnemy=0,chOrder=(0,0))
+    if skillId∉1:3 || targetFriend∉0:3 || targetEnemy∉0:3 ||
+        chOrder[1]∉0:6 || chOrder[2]∉0:6
+        throw(ErrorException("masterSkillSync: index out of range"))
+    end
+    if targetEnemy!=0
+        selectEnemy(targetEnemy)
+    end
+    masterSkill(skillId)
+    if targetFriend!=0
+        sleep(.4)
+        skillTarget(targetFriend)
+    elseif chOrder!=(0,0)
+        orderChange(chOrder...)
+    end
+    waitToSee("patt/rdy.png")
 end
 
 function card(cardId)
