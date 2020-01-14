@@ -152,8 +152,7 @@ function waitToClick(patt::String,range=anchor,delay=0.5)
     return nothing
 end
 
-function waitToSee(patt::String,range=anchor,delay=0.3)
-    sleep(delay)
+function waitToSee(patt::String,range=anchor,delay=0.2)
     patt = load(patt)
     scene = see(range)
     offset = Tuple(range[1:2])
@@ -257,6 +256,7 @@ function servantSkill(servantId,skillId;targetFriend=0,targetEnemy=0)
         sleep(.4)
         skillTarget(targetFriend)
     end
+    sleep(1)
     waitToSee("patt/rdy.png")
 end
 
@@ -308,6 +308,7 @@ function masterSkill(skillId;targetFriend=0,targetEnemy=0,chOrder=(0,0))
         sleep(.2)
         orderChange(chOrder...)
     end
+    sleep(1)
     waitToSee("patt/rdy.png")
 end
 
@@ -333,7 +334,7 @@ end
 
 function cardSelection()
     click(pos(855/960,455/540)...)
-    sleep(2.5)
+    sleep(2)
 end
 
 function quitCardSelection()
