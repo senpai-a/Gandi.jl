@@ -268,7 +268,7 @@ function skillTarget(servantId)
         throw(ErrorException("skillTarget: index out of range"))
     end
     x0,y = (254/960,(359-32)/540)
-    dx = 230
+    dx = 230/960
     x = x0+(servantId-1)*dx
     click(pos(x,y)...)
 end
