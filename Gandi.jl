@@ -252,6 +252,7 @@ function servantSkillSync(servantId,skillId;targetFriend=0,targetEnemy=0)
     if servantId∉1:3 || skillId∉1:3 || targetFriend∉0:3 || targetEnemy∉0:3
         throw(ErrorException("servantSkillSync: index out of range"))
     end
+    waitToSee("patt/rdy.png")
     if targetEnemy!=0
         selectEnemy(targetEnemy)
     end
@@ -302,6 +303,7 @@ function masterSkillSync(skillId;targetFriend=0,targetEnemy=0,chOrder=(0,0))
         chOrder[1]∉0:6 || chOrder[2]∉0:6
         throw(ErrorException("masterSkillSync: index out of range"))
     end
+    waitToSee("patt/rdy.png")
     if targetEnemy!=0
         selectEnemy(targetEnemy)
     end
@@ -376,7 +378,8 @@ function planCard(hoguId=Int[],hoguOrd=Int[])
         end
     end
     que = []
-    for pat in priority
+    cardSelection()#进入选卡
+    for pat in priority #按优先级扫描手牌
         loc = locate(pat;range=FGOUI.anchor)
         append!(que,loc)
         if length(que)>=3 break end
@@ -396,8 +399,9 @@ function planCard(hoguId=Int[],hoguOrd=Int[])
         if !selected[i] push!(cardQue,i) end
     end
     #println("cardQue: $cardQue")
+    #插入宝具
     cardi = 1
-    for i in 1:5
+    for i in 1:length(hoguId)+length(cardQue)
         if i in hoguOrd
             hogui = indexin(i,hoguOrd)[1]
             hogu(hoguId[hogui])
@@ -425,7 +429,7 @@ function 瞎几把打()
     while nextRound && !endQ
         log("继续打")
         cardSelection();sleep(2)
-        hogu(1); planCard()
+        planCard([1,2,3],[1,2,3])
         nextRound = isSeeing("patt/rdy.png")
         endQ = isSeeing("patt/end1.png")
         while !nextRound && !endQ
