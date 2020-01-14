@@ -347,8 +347,8 @@ module FGO
 using Main.Valkyrie
 using Main.FGOUI
 using Dates
-export planCard,enterQuest,瞎几把打
-export 刷本
+export planCard,enterQuest
+export 刷本,补刀,瞎几把打
 export log
 
 import Base.log
@@ -409,29 +409,34 @@ function planCard(hoguId=Int[],hoguOrd=Int[])
     return nothing
 end
 
+function 补刀(patt::String)
+    endQ = false
+    budao = false
+    while(!endQ)
+        if budao
+            log("补刀")
+            planCard()
+        end
+        sleep(3)
+        log("检查是否补刀")
+        endQ = isSeeing(patt)
+        budao = isSeeing("patt/rdy.png")
+    end
+end
+
 function 瞎几把打()
     log("开始瞎几把打")
-    nextRound = isSeeing("patt/rdy.png")
-    endQ = isSeeing("patt/end1.png")
-    while !nextRound && !endQ
-        log("等等看是继续打还是打完了")
+    nextRound = false
+    endQ = false
+    while !endQ
+        log("没打完")
+        if nextRound
+            log("继续打")
+            planCard([1,2,3],[1,2,3])
+        end
         sleep(3)
         nextRound = isSeeing("patt/rdy.png")
         endQ = isSeeing("patt/end1.png")
-    end
-    log("继续打=$(nextRound) 打完了=$(endQ)")
-    while nextRound && !endQ
-        log("继续打")
-        cardSelection();sleep(2)
-        planCard([1,2,3],[1,2,3])
-        nextRound = isSeeing("patt/rdy.png")
-        endQ = isSeeing("patt/end1.png")
-        while !nextRound && !endQ
-            log("等等看是继续打还是打完了")
-            sleep(3)
-            nextRound = isSeeing("patt/rdy.png")
-            endQ = isSeeing("patt/end1.png")
-        end
     end
     log("打完了")
     waitToClick("patt/end1.png")
