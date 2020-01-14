@@ -4,42 +4,43 @@ using .Valkyrie
 using .FGOUI
 using .FGO
 
+#编写你的策略为一个函数
 function 狂兰孔明换人3T(target1=1,target2=1,target3=1)
     function f()
         #round 1
         #阵容：狂兰 cba 孔明 | cba 加成 加成
-        servantSkillSync(3,2)#孔明
-        servantSkillSync(3,3)
-        servantSkillSync(2,1;targetFriend=1)#cba
+        servantSkill(3,2)#孔明
+        servantSkill(3,3)
+        servantSkill(2,1;targetFriend=1)#cba
         selectEnemy(target1)
         planCard([1],[2])#宝具id,宝具出牌顺序
 
         #round 2
-        servantSkillSync(3,1;targetFriend=1)#孔明
-        masterSkillSync(3;chOrder=(3,4))#换孔明->cba
+        servantSkill(3,1;targetFriend=1)#孔明
+        masterSkill(3;chOrder=(3,4))#换孔明->cba
         #阵容：狂兰 cba cba | 孔明 加成 加成
-        servantSkillSync(3,1;targetFriend=1)#cba
-        servantSkillSync(3,3;targetFriend=1)
-        servantSkillSync(1,3)#狂兰np率
+        servantSkill(3,1;targetFriend=1)#cba
+        servantSkill(3,3;targetFriend=1)
+        servantSkill(1,3)#狂兰np率
         selectEnemy(target2)
         planCard([1],[2])#宝具id,宝具出牌顺序
 
         #round 3
-        masterSkillSync(1)#全体加攻
-        masterSkillSync(2;targetEnemy=target3)#眩晕
-        servantSkillSync(3,2)#cba
-        servantSkillSync(2,2)#cba
-        servantSkillSync(2,3;targetFriend=1)
-        servantSkillSync(1,1)#狂兰
-        servantSkillSync(1,2)
+        masterSkill(1)#全体加攻
+        masterSkill(2;targetEnemy=target3)#眩晕
+        servantSkill(3,2)#cba
+        servantSkill(2,2)#cba
+        servantSkill(2,3;targetFriend=1)
+        servantSkill(1,1)#狂兰
+        servantSkill(1,2)
         planCard([1],[1])
     end
     return f
 end
 
+#设置画面位置、分辨率
 setAnchor!(3,33,960,540)
-
-#金材料
+#刷金材料本
 for i in 1:ceil(Int,(600+600+600+400)/28)
     刷本(狂兰孔明换人3T(2,2,1),"patt/quest6.png")
 end

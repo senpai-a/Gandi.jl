@@ -185,10 +185,9 @@ end # module Valkyrie
 module FGOUI
 
 using Main.Valkyrie
-export servantSkill,skillTarget,orderChange,masterSkill,card,hogu
+export servantSkill,masterSkill,card,hogu
 export selectEnemy,cardSelection,quitCardSelection
 export selectApple,refreshFriend,selectFriend
-export servantSkillSync,masterSkillSync
 
 function selectApple()
     click(pos(762/960,393/540)...)
@@ -234,13 +233,10 @@ function selectEnemy(id)
     if isSeeing("patt/enemyDoubleSelect.png")
         waitToClick("patt/enemyDoubleSelect.png")
     end
-    sleep(.3)
+    sleep(.1)
 end
 
-function servantSkill(servantId,skillId)
-    if servantId∉1:3 || skillId∉1:3
-        throw(ErrorException("servantSkill: index out of range"))
-    end
+function servantSkillAsync(servantId,skillId)
     x0,y = (52/960,(465-32)/540)
     dx = 70/960
     dx_servant = 238/960
@@ -248,15 +244,15 @@ function servantSkill(servantId,skillId)
     click(pos(x,y)...)
 end
 
-function servantSkillSync(servantId,skillId;targetFriend=0,targetEnemy=0)
+function servantSkill(servantId,skillId;targetFriend=0,targetEnemy=0)
     if servantId∉1:3 || skillId∉1:3 || targetFriend∉0:3 || targetEnemy∉0:3
-        throw(ErrorException("servantSkillSync: index out of range"))
+        throw(ErrorException("servantSkill: index out of range"))
     end
     waitToSee("patt/rdy.png")
     if targetEnemy!=0
         selectEnemy(targetEnemy)
     end
-    servantSkill(servantId,skillId)
+    servantSkillAsync(servantId,skillId)
     if targetFriend!=0
         sleep(.4)
         skillTarget(targetFriend)
@@ -287,10 +283,7 @@ function orderChange(id1,id2)
     click(pos(480/960,470/540)...)
 end
 
-function masterSkill(skillId)
-    if skillId∉1:3
-        throw(ErrorException("masterSkill: index out of range"))
-    end
+function masterSkillAsync(skillId)
     click(pos(897/960,235/540)...); sleep(.2)
     x0,y = (680/960,235/540)
     dx = 65/960
@@ -298,20 +291,21 @@ function masterSkill(skillId)
     click(pos(x,y)...)
 end
 
-function masterSkillSync(skillId;targetFriend=0,targetEnemy=0,chOrder=(0,0))
+function masterSkill(skillId;targetFriend=0,targetEnemy=0,chOrder=(0,0))
     if skillId∉1:3 || targetFriend∉0:3 || targetEnemy∉0:3 ||
         chOrder[1]∉0:6 || chOrder[2]∉0:6
-        throw(ErrorException("masterSkillSync: index out of range"))
+        throw(ErrorException("masterSkill: index out of range"))
     end
     waitToSee("patt/rdy.png")
     if targetEnemy!=0
         selectEnemy(targetEnemy)
     end
-    masterSkill(skillId)
+    masterSkillAsync(skillId)
     if targetFriend!=0
         sleep(.4)
         skillTarget(targetFriend)
     elseif chOrder!=(0,0)
+        sleep(.2)
         orderChange(chOrder...)
     end
     waitToSee("patt/rdy.png")
