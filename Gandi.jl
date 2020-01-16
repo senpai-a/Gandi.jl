@@ -207,6 +207,8 @@ function refreshFriend()
 end
 
 function selectFriend(patt::String;refreshRate=10)
+    tryToClick(patt,anchor)
+    sleep(1)
     tried = 0
     while tryToClick(patt,anchor)==false
         log("refresh friend list")
@@ -459,10 +461,12 @@ function enterQuest(entryPatt::String="patt/questEntry.png")
     waitToClick(entryPatt)
 
     inFriendSelect = isSeeing("patt/refreshFriend.png")
+    usedApple = false
     while !inFriendSelect
-        if isSeeing("patt/appleG.png")
+        if !usedApple && isSeeing("patt/appleG.png")
             log("out of AP")
             selectApple()
+            usedApple = true
         end
         inFriendSelect = isSeeing("patt/refreshFriend.png")
     end
