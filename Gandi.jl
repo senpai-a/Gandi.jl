@@ -430,7 +430,6 @@ function 瞎几把打()
     nextRound = false
     endQ = false
     while !endQ
-        log("没打完")
         if nextRound
             log("继续打")
             planCard([1,2,3],[1,2,3])
@@ -441,28 +440,32 @@ function 瞎几把打()
     end
     log("打完了")
     waitToClick("patt/end1.png")
-    click();sleep(0.2)
+    tryToClick("patt/end1.png")
+    sleep(0.5)
+    tryToClick("patt/kizuna.png")
+    tryToClick("patt/kizuna.png")
     waitToClick("patt/end2.png")
     click();sleep(0.2)
     waitToClick("patt/end3.png")
     sleep(2)
-    if isSeeing("patt/end4.png")
-        waitToClick("patt/end4.png")
-    end
+    tryToClick("patt/end4.png")
     log("出来了")
 end
 
 function enterQuest(entryPatt::String="patt/questEntry.png")
-    log("Quest start.")
+    log("Starting quest: $entryPatt")
+    waitToSee(entryPatt)
+    sleep(1)#防止截图在任务列表滚动动画中途
     waitToClick(entryPatt)
-    sleep(2)
     if isSeeing("patt/appleG.png")
+        log("out of AP")
         selectApple()
     end
-    sleep(4)
+    sleep(2)
     selectFriend("patt/friend.png")
     sleep(.5)
     waitToClick("patt/start.png")
+    log("Quest started.")
 end
 
 function 刷本(套路::Function,本::String="patt/questEntry.png")
