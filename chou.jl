@@ -21,6 +21,7 @@ while true
         end
         reset = isSeeing("patt/reset.png")
     end
+	count+=1
     println("$count 池")
     waitToClick("patt/reset.png")
     sleep(.5);click(pos(625/960,420/540)...)

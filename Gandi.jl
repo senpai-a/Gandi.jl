@@ -457,13 +457,18 @@ function enterQuest(entryPatt::String="patt/questEntry.png")
     waitToSee(entryPatt)
     sleep(1)#防止截图在任务列表滚动动画中途
     waitToClick(entryPatt)
-    if isSeeing("patt/appleG.png")
-        log("out of AP")
-        selectApple()
+
+    inFriendSelect = isSeeing("patt/refreshFriend.png")
+    while !inFriendSelect
+        if isSeeing("patt/appleG.png")
+            log("out of AP")
+            selectApple()
+        end
+        inFriendSelect = isSeeing("patt/refreshFriend.png")
     end
-    sleep(2)
+    log("Selecting friend.")
+
     selectFriend("patt/friend.png")
-    sleep(.5)
     waitToClick("patt/start.png")
     log("Quest started.")
 end
