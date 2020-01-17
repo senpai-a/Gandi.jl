@@ -11,9 +11,9 @@ count = 0
 while true
     reset = false
     while !reset
-        for i in 1:200
+        for i in 1:100
             click(pos(320/960,340/540)...)
-            sleep(.1)
+            sleep(.01)
         end
         if isSeeing("patt/endChou.png")
             println("Exiting")
@@ -21,7 +21,7 @@ while true
         end
         reset = isSeeing("patt/reset.png")
     end
-	count+=1
+	global count+=1
     println("$count 池")
     waitToClick("patt/reset.png")
     sleep(.5);click(pos(625/960,420/540)...)

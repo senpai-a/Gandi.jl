@@ -413,41 +413,31 @@ function planCard(hoguId=Int[],hoguOrd=Int[])
 end
 
 function 补刀(patt::String)
-    endQ = false
-    budao = false
-    while(!endQ)
-        if budao
+    log("检查补刀")
+    while !isSeeing(patt)
+        if isSeeing("patt/rdy.png")
             log("补刀")
             planCard()
         end
         sleep(3)
-        log("检查是否补刀")
-        endQ = isSeeing(patt)
-        budao = isSeeing("patt/rdy.png")
     end
+    log("补刀完成")
 end
 
 function 瞎几把打()
     log("开始瞎几把打")
-    nextRound = false
-    endQ = false
-    while !endQ
-        if nextRound
+    while !isSeeing("patt/end1.png")
+        if isSeeing("patt/rdy.png")
             log("继续打")
             planCard([1,2,3],[1,2,3])
         end
         sleep(3)
-        nextRound = isSeeing("patt/rdy.png")
-        endQ = isSeeing("patt/end1.png")
     end
     log("打完了")
-    waitToClick("patt/end1.png")
-    tryToClick("patt/end1.png")
-    sleep(0.5)
-    tryToClick("patt/kizuna.png")
-    tryToClick("patt/kizuna.png")
-    waitToClick("patt/end2.png")
-    click();sleep(0.2)
+    while !isSeeing("patt/end3.png")
+        click(pos(.5,.5)...)
+        sleep(.5)
+    end
     waitToClick("patt/end3.png")
     sleep(2)
     tryToClick("patt/end4.png")
@@ -460,15 +450,13 @@ function enterQuest(entryPatt::String="patt/questEntry.png")
     sleep(1)#防止截图在任务列表滚动动画中途
     waitToClick(entryPatt)
 
-    inFriendSelect = isSeeing("patt/refreshFriend.png")
     usedApple = false
-    while !inFriendSelect
+    while !isSeeing("patt/refreshFriend.png")
         if !usedApple && isSeeing("patt/appleG.png")
             log("out of AP")
             selectApple()
             usedApple = true
         end
-        inFriendSelect = isSeeing("patt/refreshFriend.png")
     end
     log("Selecting friend.")
 
