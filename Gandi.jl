@@ -196,8 +196,7 @@ function selectApple()
         sleep(0.1)
         click(pos(x,y+i*dy)...)
     end
-    sleep(0.2)
-    click(pos(626/960,420/540)...)
+    waitToClick("patt/confirmAP.png")
 end
 
 function refreshFriend()
