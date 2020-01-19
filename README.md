@@ -2,6 +2,8 @@
 
 肝帝
 
+[演示视频](https://youtu.be/ZVQP1XPRwo4)
+
 ## 环境配置 ##
 
 1. 安装Python 3
