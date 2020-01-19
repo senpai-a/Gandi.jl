@@ -206,18 +206,21 @@ function refreshFriend()
 end
 
 function selectFriend(patt::String;refreshRate=10)
-    tryToClick(patt,anchor)
+    if tryToClick(patt,anchor) return nothing end
     sleep(1)
     tried = 0
     while tryToClick(patt,anchor)==false
-        log("refresh friend list")
+        log("刷新助战列表")
         refreshFriend()
-        sleep(refreshRate)
+        sleep(2);
+        if tryToClick(patt,anchor) break end
+        sleep(refreshRate-2)
         tried+=1
         if tried>10
             throw(ErrorException("selectFriend: failed, check friend list."))
         end
     end
+    return nothing
 end
 
 function selectEnemy(id)
@@ -351,14 +354,15 @@ using Main.FGOUI
 using Dates
 export planCard,enterQuest
 export 刷本,补刀,瞎几把打
-export log
+export 掉落计数,退出
+export log,pattname
 
 import Base.log
-function log(msg::String)
+function log(msg::String,silent=false)
     f = open("log.txt","a")
     msg = "$(now()): $msg"
     println(f,msg)
-    println(msg)
+    if !silent println(msg) end
     close(f)
 end
 
@@ -423,7 +427,65 @@ function 补刀(patt::String)
     log("补刀完成")
 end
 
-function 瞎几把打()
+mutable struct 掉落计数
+    patt::String
+    name::String
+    count::Int
+end
+
+pattname(s::String) = join(split(splitpath(s)[end],'.')[1:end-1])
+
+import Base.show
+
+function show(io::IO,loot::掉落计数)
+    print(io,"$(loot.name): $(loot.count) to go")
+end
+
+function show(io::IO,::MIME"text/plain",loot::Vector{掉落计数})
+    println("$(length(loot)) 种材料：")
+    for l in loot println("  $(l)") end
+end
+
+function countLoot(loot::掉落计数)
+    loot.count -= length(locate(loot.patt))
+end
+
+struct 退出{S} end
+退出(S::Symbol) = 退出{S}()
+
+function checkLoot(loot::Vector{掉落计数},strat::退出)
+    display(loot);log("$loot",true)
+    return nothing
+end
+
+function checkLoot(loot::Vector{掉落计数},strat::退出{:刷满任意})
+    log("$loot")
+    for l in loot
+        if l.count<=0
+            log("$(l.name) 已刷够，退出。")
+            exit()
+        end
+    end
+    return nothing
+end
+
+function checkLoot(loot::Vector{掉落计数},strat::退出{:刷满所有})
+    log("$loot")
+    exitQ = true
+    for l in loot
+        if l.count>0
+            exitQ = false
+            break
+        end
+    end
+    if exitQ
+        log("已刷够，退出。")
+        exit()
+    end
+    return nothing
+end
+
+function 瞎几把打(掉落::Vector{掉落计数}=掉落计数[],退出=退出(:从不))
     log("开始瞎几把打")
     while !isSeeing("patt/end1.png")
         if isSeeing("patt/rdy.png")
@@ -437,14 +499,18 @@ function 瞎几把打()
         click(pos(.5,.5)...)
         sleep(.5)
     end
+    for loot in 掉落
+        countLoot(loot)
+    end
     waitToClick("patt/end3.png")
     sleep(2)
     tryToClick("patt/end4.png")
     log("出来了")
+    checkLoot(掉落,退出)
 end
 
-function enterQuest(entryPatt::String="patt/questEntry.png")
-    log("Starting quest: $entryPatt")
+function enterQuest(entryPatt::String="patt/questEntry.png",friend::String="patt/friend.png";useApple::Bool=true)
+    log("准备进入副本: $(pattname(entryPatt))")
     waitToSee(entryPatt)
     sleep(1)#防止截图在任务列表滚动动画中途
     waitToClick(entryPatt)
@@ -452,22 +518,25 @@ function enterQuest(entryPatt::String="patt/questEntry.png")
     usedApple = false
     while !isSeeing("patt/refreshFriend.png")
         if !usedApple && isSeeing("patt/appleG.png")
-            log("out of AP")
+            log("体力耗尽")
+            if !useApple
+                exit()
+            end
             selectApple()
             usedApple = true
         end
     end
-    log("Selecting friend.")
-
-    selectFriend("patt/friend.png")
+    log("选择助战")
+    selectFriend(friend)
     waitToClick("patt/start.png")
-    log("Quest started.")
+    log("进入副本")
 end
 
-function 刷本(套路::Function,本::String="patt/questEntry.png")
-    enterQuest(本)
+function 刷本(套路::Function,本="patt/questEntry.png",助战="patt/friend.png";
+            吃苹果=true,掉落=掉落计数[],退出=退出(:从不))
+    enterQuest(本,助战;useApple=吃苹果)
     套路()
-    瞎几把打()#finish up
+    瞎几把打(掉落,退出)#finish up
 end
 
 end  # module FGO
